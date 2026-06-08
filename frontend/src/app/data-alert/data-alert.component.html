@@ -1,0 +1,392 @@
+<div class="data-alert-container">
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <h1>🚨 数据预警中心</h1>
+    <p>实时监控数据异常，设置预警规则，及时发现数据问题</p>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="stats-cards">
+    <div 
+      class="stat-card" 
+      [class.active]="activeTab === 'rules'"
+      (click)="switchTab('rules')"
+    >
+      <div class="stat-icon">📋</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ alertStats.totalRules }}</div>
+        <div class="stat-label">预警规则</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeTab === 'rules'"
+      (click)="switchTab('rules')"
+    >
+      <div class="stat-icon">✅</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ alertStats.activeRules }}</div>
+        <div class="stat-label">启用中</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeTab === 'records'"
+      (click)="switchTab('records')"
+    >
+      <div class="stat-icon">🔔</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ alertStats.todayAlerts }}</div>
+        <div class="stat-label">今日预警</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeTab === 'records'"
+      (click)="switchTab('records')"
+    >
+      <div class="stat-icon">📩</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ alertStats.unreadAlerts }}</div>
+        <div class="stat-label">未读消息</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card warning" 
+      [class.active]="activeTab === 'records'"
+      (click)="switchTab('records')"
+    >
+      <div class="stat-icon">⚠️</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ alertStats.warningCount }}</div>
+        <div class="stat-label">警告级别</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card danger" 
+      [class.active]="activeTab === 'records'"
+      (click)="switchTab('records')"
+    >
+      <div class="stat-icon">🚨</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ alertStats.dangerCount }}</div>
+        <div class="stat-label">危险级别</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+  </div>
+
+  <!-- 预测分析卡片 -->
+  <div class="prediction-section">
+    <div class="section-header">
+      <h3>🔮 智能预测分析</h3>
+      <span class="section-desc">基于历史数据的智能预警预测</span>
+    </div>
+    
+    <div class="prediction-cards">
+      <div class="prediction-card risk-card" [class]="predictionData.nextWeekRisk">
+        <div class="prediction-icon">🎯</div>
+        <div class="prediction-content">
+          <div class="prediction-label">下周风险指数</div>
+          <div class="prediction-value">
+            <span class="risk-score">{{ predictionData.nextWeekRiskScore }}</span>
+            <span class="risk-level">{{ predictionData.nextWeekRisk === 'high' ? '高风险' : predictionData.nextWeekRisk === 'medium' ? '中等风险' : '低风险' }}</span>
+          </div>
+          <div class="risk-bar">
+            <div class="risk-fill" [style.width]="predictionData.nextWeekRiskScore + '%'"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="prediction-card trend-card">
+        <div class="prediction-icon">📈</div>
+        <div class="prediction-content">
+          <div class="prediction-label">预警趋势</div>
+          <div class="prediction-value">
+            <span [class]="predictionData.trend === 'up' ? 'trend-up' : 'trend-down'">
+              {{ predictionData.trend === 'up' ? '📈 上升' : '📉 下降' }}
+            </span>
+            <span class="trend-value">{{ predictionData.trendValue > 0 ? '+' : '' }}{{ predictionData.trendValue }}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="prediction-card alert-card">
+        <div class="prediction-icon">🔔</div>
+        <div class="prediction-content">
+          <div class="prediction-label">预测预警数</div>
+          <div class="prediction-value">
+            <span class="alert-count">{{ predictionData.predictedAlerts }}</span>
+            <span class="alert-unit">次</span>
+          </div>
+          <div class="alert-desc">预计下周触发预警</div>
+        </div>
+      </div>
+      
+      <div class="prediction-card category-card">
+        <div class="prediction-icon">⚠️</div>
+        <div class="prediction-content">
+          <div class="prediction-label">高风险分类</div>
+          <div class="prediction-value">
+            <span *ngFor="let cat of predictionData.highRiskCategories" class="category-tag">{{ cat }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 预测图表 -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h4>📊 预警趋势预测图表</h4>
+      </div>
+      <div class="chart-container">
+        <app-chart [option]="predictionChartOption" height="260px"></app-chart>
+      </div>
+    </div>
+    
+    <!-- 智能建议 -->
+    <div class="suggestions-section">
+      <div class="suggestions-header">
+        <h4>💡 智能建议</h4>
+      </div>
+      <div class="suggestions-list">
+        <div 
+          class="suggestion-item" 
+          *ngFor="let suggestion of predictionData.suggestions"
+          [class]="suggestion.priority"
+        >
+          <div class="suggestion-priority">
+            {{ suggestion.priority === 'high' ? '🔴' : suggestion.priority === 'medium' ? '🟡' : '🟢' }}
+          </div>
+          <div class="suggestion-content">
+            <h5>{{ suggestion.title }}</h5>
+            <p>{{ suggestion.desc }}</p>
+          </div>
+          <button class="suggestion-action" (click)="viewSuggestionDetail(suggestion)">查看详情 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标签页切换 -->
+  <div class="tabs-section">
+    <div class="tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'rules'"
+        (click)="switchTab('rules')"
+      >
+        📋 预警规则
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'records'"
+        (click)="switchTab('records')"
+      >
+        🔔 预警记录
+        <span class="badge" *ngIf="alertStats.unreadAlerts > 0">{{ alertStats.unreadAlerts }}</span>
+      </button>
+    </div>
+
+    <!-- 预警规则标签页 -->
+    <div class="tab-content" *ngIf="activeTab === 'rules'">
+      <div class="content-header">
+        <h3>预警规则管理</h3>
+        <button class="btn btn-primary" (click)="openAddModal()">
+          <span>➕</span> 新增规则
+        </button>
+      </div>
+      
+      <div class="rules-grid">
+        <div class="rule-card" *ngFor="let rule of alertRules">
+          <div class="rule-header">
+            <div class="rule-info">
+              <h4>{{ rule.name }}</h4>
+              <span class="rule-category">{{ rule.category }}</span>
+            </div>
+            <div class="rule-status">
+              <span class="status-badge" [class]="getStatusClass(rule.status)">
+                {{ rule.status === 'active' ? '启用中' : '已暂停' }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="rule-details">
+            <div class="detail-item">
+              <span class="detail-label">预警类型</span>
+              <span class="detail-value">{{ getAlertTypeName(rule.type) }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">触发条件</span>
+              <span class="detail-value">{{ rule.condition }} {{ rule.threshold }}{{ rule.unit }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">触发次数</span>
+              <span class="detail-value">{{ rule.triggerCount }} 次</span>
+            </div>
+            <div class="detail-item" *ngIf="rule.lastTrigger">
+              <span class="detail-label">最近触发</span>
+              <span class="detail-value">{{ rule.lastTrigger }}</span>
+            </div>
+          </div>
+          
+          <div class="rule-actions">
+            <button class="btn btn-sm" (click)="toggleRuleStatus(rule)">
+              {{ rule.status === 'active' ? '⏸️ 暂停' : '▶️ 启用' }}
+            </button>
+            <button class="btn btn-sm btn-info" (click)="openEditModal(rule)">
+              ✏️ 编辑
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="deleteRule(rule)">
+              🗑️ 删除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 预警记录标签页 -->
+    <div class="tab-content" *ngIf="activeTab === 'records'">
+      <div class="content-header">
+        <h3>预警记录</h3>
+        <button class="btn btn-secondary" (click)="markAllAsRead()">
+          <span>✓</span> 全部标记已读
+        </button>
+      </div>
+      
+      <div class="records-list">
+        <div 
+          class="record-item" 
+          *ngFor="let record of alertRecords"
+          [class.unread]="record.status === 'unread'"
+        >
+          <div class="record-level" [class]="getLevelClass(record.level)">
+            {{ record.level === 'danger' ? '🚨' : '⚠️' }}
+          </div>
+          <div class="record-content">
+            <div class="record-header">
+              <h4>{{ record.ruleName }}</h4>
+              <span class="record-time">{{ record.createTime }}</span>
+            </div>
+            <p class="record-message">{{ record.message }}</p>
+            <div class="record-data" *ngIf="record.data">
+              <span class="data-tag">当前: {{ record.data.current }}</span>
+              <span class="data-tag">阈值: {{ record.data.threshold }}</span>
+              <span class="data-tag">分类: {{ record.data.category }}</span>
+            </div>
+          </div>
+          <div class="record-actions">
+            <button 
+              *ngIf="record.status === 'unread'" 
+              class="btn btn-sm" 
+              (click)="markAsRead(record)"
+            >
+              标记已读
+            </button>
+            <span *ngIf="record.status === 'read'" class="read-badge">已读</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框 -->
+  <div class="modal-overlay" *ngIf="showModal">
+    <div class="modal-content" *ngIf="modalType === 'suggestion'">
+      <div class="modal-header">
+        <h3>💡 {{ selectedSuggestion?.title }}</h3>
+        <button class="close-btn" (click)="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="suggestion-detail">
+          <div class="detail-priority" [class]="selectedSuggestion?.priority">
+            <span class="priority-badge" [class]="getPriorityClass(selectedSuggestion?.priority)"></span>
+            <span class="priority-text">
+              {{ selectedSuggestion?.priority === 'high' ? '高优先级建议' : 
+                 selectedSuggestion?.priority === 'medium' ? '中优先级建议' : '低优先级建议' }}
+            </span>
+          </div>
+          <div class="detail-section">
+            <h4>📋 问题描述</h4>
+            <p>{{ selectedSuggestion?.desc }}</p>
+          </div>
+          <div class="detail-section">
+            <h4>💡 建议措施</h4>
+            <ul class="suggestion-measures">
+              <li>持续监控相关数据指标</li>
+              <li>及时采取预防措施</li>
+              <li>定期评估预警效果</li>
+            </ul>
+          </div>
+          <div class="detail-section">
+            <h4>📊 影响范围</h4>
+            <p>该建议影响以下数据分类：月度销售、月度营收</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">关闭</button>
+        <button class="btn btn-primary" (click)="viewRules()">查看预警规则</button>
+      </div>
+    </div>
+    
+    <div class="modal-content" *ngIf="modalType === 'add' || modalType === 'edit'">
+      <div class="modal-header">
+        <h3>{{ modalType === 'add' ? '新增预警规则' : '编辑预警规则' }}</h3>
+        <button class="close-btn" (click)="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>规则名称</label>
+          <input type="text" [(ngModel)]="newRule.name" class="form-control" placeholder="请输入规则名称">
+        </div>
+        <div class="form-group">
+          <label>数据分类</label>
+          <select [(ngModel)]="newRule.category" class="form-control">
+            <option value="">全部分类</option>
+            <option *ngFor="let cat of categories" [value]="cat.name">{{ cat.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>预警类型</label>
+          <select [(ngModel)]="newRule.type" class="form-control">
+            <option value="threshold">阈值预警</option>
+            <option value="trend">趋势预警</option>
+            <option value="anomaly">异常检测</option>
+            <option value="quality">质量预警</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>触发条件</label>
+          <select [(ngModel)]="newRule.condition" class="form-control">
+            <option value="低于">低于</option>
+            <option value="高于">高于</option>
+            <option value="等于">等于</option>
+            <option value="下降超过">下降超过</option>
+            <option value="上升超过">上升超过</option>
+            <option value="偏离平均值">偏离平均值</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>阈值</label>
+            <input type="number" [(ngModel)]="newRule.threshold" class="form-control" placeholder="请输入阈值">
+          </div>
+          <div class="form-group">
+            <label>单位</label>
+            <input type="text" [(ngModel)]="newRule.unit" class="form-control" placeholder="如：元、%、条">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeModal()">取消</button>
+        <button class="btn btn-primary" (click)="saveRule()">保存</button>
+      </div>
+    </div>
+  </div>
+</div>

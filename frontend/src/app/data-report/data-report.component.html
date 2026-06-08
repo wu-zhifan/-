@@ -1,0 +1,138 @@
+<div class="data-report-container">
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <h1>📊 数据报表中心</h1>
+    <p>多维度数据分析报表，支持分类统计、趋势分析、对比分析等功能</p>
+  </div>
+
+  <!-- 报表类型选择 -->
+  <div class="report-types">
+    <div 
+      *ngFor="let type of reportTypes" 
+      class="report-type-card"
+      [class.active]="currentReportType === type.id"
+      (click)="switchReportType(type.id)"
+    >
+      <span class="type-icon">{{ type.icon }}</span>
+      <span class="type-name">{{ type.name }}</span>
+    </div>
+  </div>
+
+  <!-- 筛选条件 -->
+  <div class="filter-section">
+    <div class="filter-row">
+      <div class="filter-item">
+        <label>开始日期</label>
+        <input type="date" [(ngModel)]="filters.startDate" class="form-control">
+      </div>
+      <div class="filter-item">
+        <label>结束日期</label>
+        <input type="date" [(ngModel)]="filters.endDate" class="form-control">
+      </div>
+      <div class="filter-item">
+        <label>数据分类</label>
+        <select [(ngModel)]="filters.categoryId" class="form-control">
+          <option value="">全部分类</option>
+          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button (click)="generateReport()" class="btn btn-primary">
+          <span>🔍</span> 生成报表
+        </button>
+        <button (click)="exportReport()" class="btn btn-success">
+          <span>📥</span> 导出
+        </button>
+        <button (click)="printReport()" class="btn btn-info">
+          <span>🖨️</span> 打印
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 统计摘要卡片 -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon">📊</div>
+      <div class="card-info">
+        <div class="card-value">{{ summaryStats.totalCount | number }}</div>
+        <div class="card-label">总数据量</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">💰</div>
+      <div class="card-info">
+        <div class="card-value">{{ summaryStats.totalValue | number }}</div>
+        <div class="card-label">总金额</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">📈</div>
+      <div class="card-info">
+        <div class="card-value">{{ summaryStats.avgValue | number }}</div>
+        <div class="card-label">平均值</div>
+      </div>
+    </div>
+    <div class="summary-card">
+      <div class="card-icon">🔝</div>
+      <div class="card-info">
+        <div class="card-value">{{ summaryStats.maxValue | number }}</div>
+        <div class="card-label">最大值</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图表展示 -->
+  <div class="chart-section" *ngIf="chartOption">
+    <div class="section-header">
+      <h3>📈 可视化图表</h3>
+    </div>
+    <div class="chart-container">
+      <app-chart [option]="chartOption"></app-chart>
+    </div>
+  </div>
+
+  <!-- 数据表格 -->
+  <div class="table-section">
+    <div class="section-header">
+      <h3>📋 详细数据</h3>
+    </div>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th *ngFor="let col of tableColumns">{{ col }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of tableData">
+            <td *ngFor="let col of tableColumns">
+              <ng-container [ngSwitch]="col">
+                <span *ngSwitchCase="'占比'" class="percent-badge">{{ row.percent }}%</span>
+                <span *ngSwitchCase="'环比增长'" [class.positive]="row.mom > 0" [class.negative]="row.mom < 0">
+                  {{ row.mom > 0 ? '+' : '' }}{{ row.mom }}%
+                </span>
+                <span *ngSwitchCase="'同比增长'" [class.positive]="row.yoy > 0" [class.negative]="row.yoy < 0">
+                  {{ row.yoy > 0 ? '+' : '' }}{{ row.yoy }}%
+                </span>
+                <span *ngSwitchCase="'变化率'" [class.positive]="row.rate > 0" [class.negative]="row.rate < 0">
+                  {{ row.rate > 0 ? '+' : '' }}{{ row.rate }}%
+                </span>
+                <span *ngSwitchCase="'状态'" [class.status-up]="row.status === 'up'" [class.status-down]="row.status === 'down'">
+                  {{ row.status === 'up' ? '↗️ 上升' : row.status === 'down' ? '↘️ 下降' : '➡️ 持平' }}
+                </span>
+                <span *ngSwitchDefault>{{ row[getFieldName(col)] }}</span>
+              </ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 加载状态 -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner"></div>
+    <p>正在生成报表...</p>
+  </div>
+</div>

@@ -1,0 +1,124 @@
+<div class="data-entry-container">
+  <!-- 数据录入表单 -->
+  <div class="entry-form-card">
+    <h2>数据录入</h2>
+    <form [formGroup]="entryForm" class="entry-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>分类 <span class="required">*</span></label>
+          <select formControlName="categoryId">
+            <option value="">请选择分类</option>
+            <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+          </select>
+          <div *ngIf="entryForm.get('categoryId')?.invalid && entryForm.get('categoryId')?.touched" class="error">
+            请选择分类
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>标题 <span class="required">*</span></label>
+          <input type="text" formControlName="title" placeholder="请输入数据标题">
+          <div *ngIf="entryForm.get('title')?.invalid && entryForm.get('title')?.touched" class="error">
+            标题不能为空且最多200字符
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>数值 <span class="required">*</span></label>
+          <input type="number" formControlName="value" placeholder="请输入数值">
+          <div *ngIf="entryForm.get('value')?.invalid && entryForm.get('value')?.touched" class="error">
+            数值不能为空且必须大于0
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>单位</label>
+          <input type="text" formControlName="unit" placeholder="如：元、件、人">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>时间 <span class="required">*</span></label>
+          <input type="datetime-local" formControlName="time">
+          <div *ngIf="entryForm.get('time')?.invalid && entryForm.get('time')?.touched" class="error">
+            请选择时间
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>备注</label>
+          <textarea formControlName="remark" placeholder="请输入备注信息"></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" (click)="submitForm()" [disabled]="isSubmitting" class="submit-btn">
+          <span *ngIf="isSubmitting">提交中...</span>
+          <span *ngIf="!isSubmitting">提交数据</span>
+        </button>
+        <button type="button" (click)="resetForm()" class="reset-btn">重置</button>
+      </div>
+
+      <div *ngIf="submitMessage" class="message">{{ submitMessage }}</div>
+    </form>
+  </div>
+
+  <!-- 批量导入区域 -->
+  <div class="import-card">
+    <h2>批量导入</h2>
+    <div class="import-area">
+      <input type="file" (change)="onFileSelect($event)" accept=".xlsx,.xls,.csv" #fileInput>
+      <div class="file-info" *ngIf="selectedFile">
+        <span>已选择: {{ selectedFile.name }}</span>
+        <span>{{ (selectedFile.size / 1024).toFixed(2) }} KB</span>
+      </div>
+      <button (click)="importExcel()" [disabled]="isUploading || !selectedFile" class="import-btn">
+        <span *ngIf="isUploading">导入中...</span>
+        <span *ngIf="!isUploading">开始导入</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 数据列表 -->
+  <div class="data-list-card">
+    <h2>数据列表</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>分类</th>
+          <th>标题</th>
+          <th>数值</th>
+          <th>单位</th>
+          <th>时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of dataList">
+          <td>{{ item.id }}</td>
+          <td>{{ item.categoryName }}</td>
+          <td>{{ item.title }}</td>
+          <td>{{ item.value | numberFormat }}</td>
+          <td>{{ item.unit }}</td>
+          <td>{{ item.time | dateFormat:'YYYY-MM-DD' }}</td>
+          <td>
+            <button (click)="deleteData(item.id)" class="delete-btn">删除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 分页组件 -->
+    <app-table-pagination
+      [page]="pagination.page"
+      [size]="pagination.size"
+      [total]="pagination.total"
+      (pageChange)="onPageChange($event)"
+      (sizeChange)="onSizeChange($event)">
+    </app-table-pagination>
+  </div>
+</div>

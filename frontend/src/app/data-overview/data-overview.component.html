@@ -1,0 +1,96 @@
+<div class="data-overview">
+  <div class="overview-header">
+    <h2>📊 数据总览</h2>
+    <div class="header-actions">
+      <button class="btn-refresh" (click)="refresh()">
+        🔄 刷新数据
+      </button>
+    </div>
+  </div>
+
+  <!-- 总体统计卡片 -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-icon">📈</div>
+      <div class="card-content">
+        <div class="card-value">{{ formatNumber(totalStats.totalRecords) }}</div>
+        <div class="card-label">总记录数</div>
+      </div>
+    </div>
+    
+    <div class="summary-card">
+      <div class="card-icon">📁</div>
+      <div class="card-content">
+        <div class="card-value">{{ totalStats.totalCategories }}</div>
+        <div class="card-label">数据分类</div>
+      </div>
+    </div>
+    
+    <div class="summary-card">
+      <div class="card-icon">💰</div>
+      <div class="card-content">
+        <div class="card-value">{{ formatNumber(totalStats.totalValue) }}</div>
+        <div class="card-label">总金额</div>
+      </div>
+    </div>
+    
+    <div class="summary-card">
+      <div class="card-icon">📊</div>
+      <div class="card-content">
+        <div class="card-value">{{ formatNumber(totalStats.avgValue) }}</div>
+        <div class="card-label">平均金额</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分类列表 -->
+  <div class="category-list" *ngIf="!isLoading">
+    <div class="category-card" 
+         *ngFor="let stat of categoryStats; let i = index"
+         [style.border-left-color]="getCategoryColor(i)">
+      <div class="category-icon" [style.background-color]="getCategoryColor(i)">
+        {{ getCategoryIcon(i) }}
+      </div>
+      
+      <div class="category-info">
+        <div class="category-name">{{ stat.name }}</div>
+        <div class="category-code">{{ stat.code }}</div>
+        <div class="category-desc">{{ stat.description }}</div>
+      </div>
+      
+      <div class="category-stats">
+        <div class="stat-item">
+          <div class="stat-value">{{ formatNumber(stat.recordCount) }}</div>
+          <div class="stat-label">记录数</div>
+        </div>
+        
+        <div class="stat-item">
+          <div class="stat-value">{{ formatNumber(stat.totalValue) }}</div>
+          <div class="stat-label">总金额</div>
+        </div>
+        
+        <div class="stat-item">
+          <div class="stat-value">{{ formatNumber(stat.avgValue) }}</div>
+          <div class="stat-label">平均值</div>
+        </div>
+        
+        <div class="stat-item highlight">
+          <div class="stat-value">{{ getPercentage(stat.totalValue) }}</div>
+          <div class="stat-label">占比</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加载状态 -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>正在加载数据...</p>
+  </div>
+
+  <!-- 无数据状态 -->
+  <div class="empty-state" *ngIf="!isLoading && categoryStats.length === 0">
+    <div class="empty-icon">📭</div>
+    <p>暂无分类数据</p>
+  </div>
+</div>

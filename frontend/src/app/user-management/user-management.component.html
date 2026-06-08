@@ -1,0 +1,248 @@
+<div class="user-management-container">
+  <!-- 页面标题 -->
+  <div class="page-header fade-in">
+    <h1 class="page-title">用户权限管理</h1>
+    <p class="page-subtitle">管理系统用户、角色权限和操作日志</p>
+  </div>
+
+  <!-- 筛选栏 -->
+  <div class="filter-bar card glass fade-in">
+    <div class="filter-row">
+      <div class="filter-item search-item">
+        <span class="filter-label">🔍 关键字</span>
+        <input type="text" placeholder="搜索用户名或姓名..." [(ngModel)]="filterConditions.keyword" (keyup.enter)="onFilterChange()">
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">👤 角色</span>
+        <select [(ngModel)]="filterConditions.roleId" (change)="onFilterChange()">
+          <option value="">全部角色</option>
+          <option *ngFor="let role of roles" [value]="role.id">{{ role.roleName }}</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <span class="filter-label">📊 状态</span>
+        <select [(ngModel)]="filterConditions.status" (change)="onFilterChange()">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">禁用</option>
+        </select>
+      </div>
+      <button class="btn-primary add-btn" (click)="openAddModal()">
+        <span class="btn-icon">➕</span>
+        新增用户
+      </button>
+    </div>
+  </div>
+
+  <!-- 用户列表 -->
+  <div class="user-list-card card fade-in">
+    <div class="card-header">
+      <h3>用户列表</h3>
+      <span class="total-count">共 {{ pagination.total }} 个用户</span>
+    </div>
+
+    <div class="table-container" [class.loading]="isLoading">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>姓名</th>
+            <th>邮箱</th>
+            <th>电话</th>
+            <th>角色</th>
+            <th>状态</th>
+            <th>最后登录</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.realName }}</td>
+            <td>{{ user.email || '-' }}</td>
+            <td>{{ user.phone || '-' }}</td>
+            <td>
+              <span class="role-tag" [style.background]="getRoleColor(user.roleId)">
+                {{ user.roleName }}
+              </span>
+            </td>
+            <td>
+              <span class="status-tag" [class]="getStatusClass(user.status)">
+                {{ getStatusText(user.status) }}
+              </span>
+            </td>
+            <td>{{ user.lastLoginTime | dateFormat:'YYYY-MM-DD HH:mm' || '从未登录' }}</td>
+            <td class="actions">
+              <button class="action-btn edit-btn" (click)="openEditModal(user)" title="编辑">
+                ✏️
+              </button>
+              <button class="action-btn password-btn" (click)="openPasswordModal(user)" title="修改密码">
+                🔑
+              </button>
+              <button class="action-btn log-btn" (click)="viewLogs(user)" title="查看日志">
+                📋
+              </button>
+              <button class="action-btn delete-btn" (click)="deleteUser(user)" title="删除" *ngIf="user.roleId !== 1">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <button class="page-btn" (click)="onPageChange(pagination.page - 1)" [disabled]="pagination.page <= 1">
+          ← 上一页
+        </button>
+        <span class="page-info">第 {{ pagination.page }} 页 / 共 {{ Math.ceil(pagination.total / pagination.size) }} 页</span>
+        <button class="page-btn" (click)="onPageChange(pagination.page + 1)" [disabled]="pagination.page >= Math.ceil(pagination.total / pagination.size)">
+          下一页 →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 用户编辑弹窗 -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-content card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ editMode ? '编辑用户' : '新增用户' }}</h3>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+
+      <form [formGroup]="userForm" class="modal-form">
+        <div class="form-group">
+          <label>用户名 <span class="required">*</span></label>
+          <input type="text" formControlName="username" placeholder="请输入用户名">
+          <div class="error" *ngIf="userForm.get('username')?.invalid && userForm.get('username')?.touched">
+            用户名至少3个字符
+          </div>
+        </div>
+
+        <div class="form-group" *ngIf="!editMode">
+          <label>密码 <span class="required">*</span></label>
+          <input type="password" formControlName="password" placeholder="请输入密码">
+          <div class="error" *ngIf="userForm.get('password')?.invalid && userForm.get('password')?.touched">
+            密码至少6个字符
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>姓名 <span class="required">*</span></label>
+          <input type="text" formControlName="realName" placeholder="请输入真实姓名">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>邮箱</label>
+            <input type="email" formControlName="email" placeholder="请输入邮箱">
+          </div>
+          <div class="form-group">
+            <label>电话</label>
+            <input type="text" formControlName="phone" placeholder="请输入电话">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>角色 <span class="required">*</span></label>
+            <select formControlName="roleId">
+              <option value="">请选择角色</option>
+              <option *ngFor="let role of roles" [value]="role.id">{{ role.roleName }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>状态</label>
+            <select formControlName="status">
+              <option value="1">启用</option>
+              <option value="0">禁用</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="message" *ngIf="message" [class]="messageType">
+          {{ message }}
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">取消</button>
+          <button type="button" class="btn-primary" (click)="submitForm()" [disabled]="isSubmitting">
+            {{ isSubmitting ? '提交中...' : '保存' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 修改密码弹窗 -->
+  <div class="modal-overlay" *ngIf="showPasswordModal" (click)="closeModal()">
+    <div class="modal-content card small-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>修改密码</h3>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+
+      <form [formGroup]="passwordForm" class="modal-form">
+        <div class="form-group">
+          <label>当前密码 <span class="required">*</span></label>
+          <input type="password" formControlName="oldPassword" placeholder="请输入当前密码">
+        </div>
+
+        <div class="form-group">
+          <label>新密码 <span class="required">*</span></label>
+          <input type="password" formControlName="newPassword" placeholder="请输入新密码">
+          <div class="error" *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched">
+            新密码至少6个字符
+          </div>
+        </div>
+
+        <div class="message" *ngIf="message" [class]="messageType">
+          {{ message }}
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="closeModal()">取消</button>
+          <button type="button" class="btn-primary" (click)="changePassword()" [disabled]="isSubmitting">
+            {{ isSubmitting ? '修改中...' : '确认修改' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 操作日志弹窗 -->
+  <div class="modal-overlay" *ngIf="showLogModal" (click)="closeModal()">
+    <div class="modal-content card log-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>操作日志 - {{ selectedUser?.username }}</h3>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+
+      <div class="log-list">
+        <div class="log-item" *ngFor="let log of logs">
+          <div class="log-icon">{{ getLogIcon(log.operation) }}</div>
+          <div class="log-content">
+            <div class="log-title">
+              <span class="log-operation">{{ log.operation }}</span>
+              <span class="log-module">{{ log.module }}</span>
+            </div>
+            <div class="log-desc">{{ log.content }}</div>
+            <div class="log-time">{{ log.createTime | dateFormat:'YYYY-MM-DD HH:mm:ss' }}</div>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="logs.length === 0">
+          <span class="empty-icon">📭</span>
+          <span>暂无操作日志</span>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeModal()">关闭</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,7 @@
+<div class="chart-wrapper">
+  <div #chartContainer class="chart-container" [style.height]="height"></div>
+  <div *ngIf="loading" class="chart-loading">
+    <div class="loading-spinner"></div>
+    <span>数据加载中...</span>
+  </div>
+</div>

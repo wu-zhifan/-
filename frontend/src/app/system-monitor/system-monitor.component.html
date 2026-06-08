@@ -1,0 +1,174 @@
+<div class="system-monitor-container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-text">
+        <h1>🔍 系统监控中心</h1>
+        <p>实时监控系统运行状态、在线用户、服务健康度等信息</p>
+      </div>
+      <button class="refresh-btn" (click)="refreshData()">
+        🔄 刷新数据
+      </button>
+    </div>
+  </div>
+
+  <div class="resource-section">
+    <h3>💻 系统资源</h3>
+    <div class="resource-grid">
+      <div class="resource-card">
+        <div class="resource-header">
+          <span class="resource-icon">🖥️</span>
+          <span class="resource-name">CPU</span>
+        </div>
+        <div class="resource-usage">
+          <div class="usage-ring" [style]="getUsageStyle(systemStatus.cpu.usage)">
+            <svg viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="ring-progress" cx="50" cy="50" r="45" [style.stroke-dashoffset]="getStrokeDashoffset(systemStatus.cpu.usage)"></circle>
+            </svg>
+            <div class="usage-text">
+              <span class="usage-value">{{ systemStatus.cpu.usage }}</span>
+              <span class="usage-unit">%</span>
+            </div>
+          </div>
+        </div>
+        <div class="resource-details">
+          <div class="detail-item">核心数: {{ systemStatus.cpu.cores }} 核</div>
+          <div class="detail-item">频率: {{ systemStatus.cpu.frequency }}</div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-header">
+          <span class="resource-icon">💾</span>
+          <span class="resource-name">内存</span>
+        </div>
+        <div class="resource-usage">
+          <div class="usage-ring" [style]="getUsageStyle(systemStatus.memory.usage)">
+            <svg viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="ring-progress" cx="50" cy="50" r="45" [style.stroke-dashoffset]="getStrokeDashoffset(systemStatus.memory.usage)"></circle>
+            </svg>
+            <div class="usage-text">
+              <span class="usage-value">{{ systemStatus.memory.usage }}</span>
+              <span class="usage-unit">%</span>
+            </div>
+          </div>
+        </div>
+        <div class="resource-details">
+          <div class="detail-item">已用: {{ (systemStatus.memory.used / 1024).toFixed(1) }} GB</div>
+          <div class="detail-item">可用: {{ (systemStatus.memory.free / 1024).toFixed(1) }} GB</div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-header">
+          <span class="resource-icon">💿</span>
+          <span class="resource-name">磁盘</span>
+        </div>
+        <div class="resource-usage">
+          <div class="usage-ring" [style]="getUsageStyle(systemStatus.disk.usage)">
+            <svg viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="45"></circle>
+              <circle class="ring-progress" cx="50" cy="50" r="45" [style.stroke-dashoffset]="getStrokeDashoffset(systemStatus.disk.usage)"></circle>
+            </svg>
+            <div class="usage-text">
+              <span class="usage-value">{{ systemStatus.disk.usage }}</span>
+              <span class="usage-unit">%</span>
+            </div>
+          </div>
+        </div>
+        <div class="resource-details">
+          <div class="detail-item">已用: {{ (systemStatus.disk.used / 1024).toFixed(1) }} GB</div>
+          <div class="detail-item">可用: {{ (systemStatus.disk.free / 1024).toFixed(1) }} GB</div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-header">
+          <span class="resource-icon">🌐</span>
+          <span class="resource-name">网络</span>
+        </div>
+        <div class="network-stats">
+          <div class="network-item">⬆️ {{ systemStatus.network.upload.toFixed(1) }} MB/s</div>
+          <div class="network-item">⬇️ {{ systemStatus.network.download.toFixed(1) }} MB/s</div>
+          <div class="network-item">🔗 {{ systemStatus.network.connections }} 连接</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="users-section">
+    <div class="section-header">
+      <h3>👥 在线用户 ({{ onlineUsers.length }})</h3>
+    </div>
+    <div class="users-table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>用户</th>
+            <th>登录时间</th>
+            <th>IP地址</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of onlineUsers">
+            <td>{{ user.realName }} ({{ user.username }})</td>
+            <td>{{ user.loginTime }}</td>
+            <td>{{ user.ip }}</td>
+            <td>
+              <span [class]="getStatusClass(user.status)">
+                {{ user.status === 'active' ? '🟢 活跃' : user.status === 'idle' ? '🟡 空闲' : '🔴 离线' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-danger" (click)="kickUser(user)">
+                👢 踢除
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="services-section">
+    <div class="section-header">
+      <h3>🛠️ 服务状态</h3>
+    </div>
+    <div class="services-grid">
+      <div class="service-card" *ngFor="let service of services">
+        <div class="service-header">
+          <span [class]="getServiceStatusClass(service.status)"></span>
+          <span>{{ service.name }}</span>
+        </div>
+        <div class="service-info">
+          <div>状态: {{ service.status === 'running' ? '运行中' : service.status === 'stopped' ? '已停止' : '异常' }}</div>
+          <div>运行时间: {{ service.uptime }}</div>
+          <div>版本: {{ service.version }}</div>
+          <div>端口: {{ service.port }}</div>
+        </div>
+        <div class="service-actions">
+          <button class="btn btn-sm" (click)="startService(service)" *ngIf="service.status !== 'running'">▶️ 启动</button>
+          <button class="btn btn-sm" (click)="stopService(service)" *ngIf="service.status === 'running'">⏹️ 停止</button>
+          <button class="btn btn-sm" (click)="restartService(service)">🔄 重启</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="logs-section">
+    <div class="section-header">
+      <h3>📋 系统日志</h3>
+      <button class="btn btn-sm" (click)="clearLogs()">🗑️ 清空日志</button>
+    </div>
+    <div class="logs-list">
+      <div class="log-item" *ngFor="let log of systemLogs">
+        <span>{{ log.time }}</span>
+        <span [class]="getLogLevelClass(log.level)">{{ log.level.toUpperCase() }}</span>
+        <span>{{ log.message }}</span>
+      </div>
+    </div>
+  </div>
+</div>

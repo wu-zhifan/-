@@ -1,0 +1,198 @@
+<div class="operation-log-container">
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <h1>📋 操作日志</h1>
+    <p>记录系统所有用户操作行为，便于审计和问题追踪</p>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="stats-cards">
+    <div 
+      class="stat-card" 
+      [class.active]="activeFilter === 'all'"
+      (click)="filterByType('all')"
+    >
+      <div class="stat-icon">📊</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ logStats.totalLogs }}</div>
+        <div class="stat-label">总日志数</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeFilter === 'today'"
+      (click)="filterByType('today')"
+    >
+      <div class="stat-icon">📅</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ logStats.todayLogs }}</div>
+        <div class="stat-label">今日日志</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeFilter === 'login'"
+      (click)="filterByType('login')"
+    >
+      <div class="stat-icon">🔑</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ logStats.loginCount }}</div>
+        <div class="stat-label">登录次数</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeFilter === 'operation'"
+      (click)="filterByType('operation')"
+    >
+      <div class="stat-icon">⚙️</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ logStats.operationCount }}</div>
+        <div class="stat-label">操作次数</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card" 
+      [class.active]="activeFilter === 'export'"
+      (click)="filterByType('export')"
+    >
+      <div class="stat-icon">📥</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ logStats.exportCount }}</div>
+        <div class="stat-label">导出次数</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+    <div 
+      class="stat-card danger" 
+      [class.active]="activeFilter === 'failed'"
+      (click)="filterByType('failed')"
+    >
+      <div class="stat-icon">❌</div>
+      <div class="stat-info">
+        <div class="stat-value">{{ logStats.failedCount }}</div>
+        <div class="stat-label">失败次数</div>
+      </div>
+      <div class="stat-action">查看 →</div>
+    </div>
+  </div>
+
+  <!-- 筛选区域 -->
+  <div class="filter-section">
+    <div class="filter-row">
+      <div class="filter-item">
+        <label>操作用户</label>
+        <input type="text" [(ngModel)]="filters.user" class="form-control" placeholder="用户名/姓名">
+      </div>
+      <div class="filter-item">
+        <label>操作类型</label>
+        <select [(ngModel)]="filters.operation" class="form-control">
+          <option *ngFor="let op of operationTypes" [value]="op.value">{{ op.label }}</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label>操作模块</label>
+        <select [(ngModel)]="filters.module" class="form-control">
+          <option *ngFor="let mod of moduleTypes" [value]="mod.value">{{ mod.label }}</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label>操作状态</label>
+        <select [(ngModel)]="filters.status" class="form-control">
+          <option *ngFor="let status of statusTypes" [value]="status.value">{{ status.label }}</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-row">
+      <div class="filter-item">
+        <label>开始日期</label>
+        <input type="date" [(ngModel)]="filters.startDate" class="form-control">
+      </div>
+      <div class="filter-item">
+        <label>结束日期</label>
+        <input type="date" [(ngModel)]="filters.endDate" class="form-control">
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" (click)="applyFilters()">
+          <span>🔍</span> 查询
+        </button>
+        <button class="btn btn-secondary" (click)="resetFilters()">
+          <span>🔄</span> 重置
+        </button>
+        <button class="btn btn-success" (click)="exportLogs()">
+          <span>📥</span> 导出
+        </button>
+        <button class="btn btn-danger" (click)="clearLogs()">
+          <span>🗑️</span> 清空
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日志表格 -->
+  <div class="table-section">
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>用户</th>
+            <th>操作类型</th>
+            <th>操作模块</th>
+            <th>操作内容</th>
+            <th>IP地址</th>
+            <th>操作时间</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of getPaginatedLogs()">
+            <td>{{ log.id }}</td>
+            <td>
+              <div class="user-info">
+                <span class="user-name">{{ log.realName }}</span>
+                <span class="user-account">&#64;<span>{{ log.user }}</span></span>
+              </div>
+            </td>
+            <td>
+              <span class="operation-badge" [class]="getOperationClass(log.operation)">
+                {{ getOperationName(log.operation) }}
+              </span>
+            </td>
+            <td>{{ log.module }}</td>
+            <td class="content-cell">{{ log.content }}</td>
+            <td>{{ log.ip }}</td>
+            <td>{{ log.createTime }}</td>
+            <td>
+              <span class="status-badge" [class]="getStatusClass(log.status)">
+                {{ log.status === 'success' ? '✅ 成功' : '❌ 失败' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pagination">
+      <div class="pagination-info">
+        显示 {{ (pagination.page - 1) * pagination.size + 1 }} - 
+        {{ Math.min(pagination.page * pagination.size, pagination.total) }} 条，
+        共 {{ pagination.total }} 条
+      </div>
+      <div class="pagination-controls">
+        <button class="btn btn-sm" [disabled]="pagination.page <= 1" (click)="prevPage()">
+          ← 上一页
+        </button>
+        <span class="page-info">第 {{ pagination.page }} 页</span>
+        <button class="btn btn-sm" [disabled]="pagination.page >= Math.ceil(pagination.total / pagination.size)" (click)="nextPage()">
+          下一页 →
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

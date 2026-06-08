@@ -1,0 +1,25 @@
+<div class="pagination-container">
+  <div class="pagination-info">
+    <span>显示 {{ displayRange }} 条，共 {{ total }} 条</span>
+  </div>
+
+  <div class="pagination-controls">
+    <select [(ngModel)]="size" (change)="changeSize(size)" class="size-select">
+      <option *ngFor="let opt of sizeOptions" [value]="opt">{{ opt }} 条/页</option>
+    </select>
+
+    <button (click)="prevPage()" [disabled]="page === 1" class="page-btn">上一页</button>
+
+    <div class="page-numbers">
+      <button 
+        *ngFor="let p of getPageNumbers()"
+        [class.active]="p === page"
+        (click)="changePage(p)"
+        class="page-num-btn">
+        {{ p }}
+      </button>
+    </div>
+
+    <button (click)="nextPage()" [disabled]="page === totalPages" class="page-btn">下一页</button>
+  </div>
+</div>

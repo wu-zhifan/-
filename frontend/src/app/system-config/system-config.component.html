@@ -1,0 +1,153 @@
+<div class="system-config-container">
+  <!-- 选项卡导航 -->
+  <div class="tabs">
+    <button [class.active]="currentTab === 'users'" (click)="switchTab('users')">用户管理</button>
+    <button [class.active]="currentTab === 'categories'" (click)="switchTab('categories')">分类管理</button>
+  </div>
+
+  <!-- 用户管理 -->
+  <div *ngIf="currentTab === 'users'" class="tab-content">
+    <!-- 用户添加表单 -->
+    <div class="form-card">
+      <h3>添加用户</h3>
+      <form [formGroup]="userForm" class="user-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>用户名</label>
+            <input type="text" formControlName="username" placeholder="请输入用户名">
+          </div>
+          <div class="form-group">
+            <label>密码</label>
+            <input type="password" formControlName="password" placeholder="请输入密码">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>真实姓名</label>
+            <input type="text" formControlName="realName" placeholder="请输入真实姓名">
+          </div>
+          <div class="form-group">
+            <label>邮箱</label>
+            <input type="email" formControlName="email" placeholder="请输入邮箱">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>电话</label>
+            <input type="text" formControlName="phone" placeholder="请输入电话">
+          </div>
+          <div class="form-group">
+            <label>角色</label>
+            <select formControlName="roleId">
+              <option [ngValue]="1">管理员</option>
+              <option [ngValue]="2">编辑员</option>
+              <option [ngValue]="3">普通用户</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>状态</label>
+            <select formControlName="status">
+              <option [ngValue]="1">启用</option>
+              <option [ngValue]="0">禁用</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" (click)="addUser()" [disabled]="isSubmitting" class="add-btn">添加用户</button>
+      </form>
+    </div>
+
+    <!-- 用户列表 -->
+    <div class="list-card">
+      <h3>用户列表</h3>
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>用户名</th>
+            <th>角色</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ getRoleName(user.roleId) }}</td>
+            <td>
+              <span [class.status-active]="user.status === 1" [class.status-disabled]="user.status === 0">
+                {{ user.status === 1 ? '启用' : '禁用' }}
+              </span>
+            </td>
+            <td>{{ user.createTime | dateFormat:'YYYY-MM-DD HH:mm' }}</td>
+            <td>
+              <button (click)="updateUserStatus(user.id, user.status === 1 ? 0 : 1)" class="toggle-btn">
+                {{ user.status === 1 ? '禁用' : '启用' }}
+              </button>
+              <button (click)="deleteUser(user.id)" class="delete-btn">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 分类管理 -->
+  <div *ngIf="currentTab === 'categories'" class="tab-content">
+    <!-- 分类添加表单 -->
+    <div class="form-card">
+      <h3>添加分类</h3>
+      <form [formGroup]="categoryForm" class="category-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类名称</label>
+            <input type="text" formControlName="name" placeholder="请输入分类名称">
+          </div>
+          <div class="form-group">
+            <label>父级分类</label>
+            <select formControlName="parentId">
+              <option value="0">顶级分类</option>
+              <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>排序号</label>
+            <input type="number" formControlName="sortOrder" placeholder="排序号">
+          </div>
+        </div>
+        <button type="button" (click)="addCategory()" [disabled]="isSubmitting" class="add-btn">添加分类</button>
+      </form>
+    </div>
+
+    <!-- 分类树 -->
+    <div class="list-card">
+      <h3>分类树结构</h3>
+      <div class="category-tree">
+        <div *ngFor="let cat of categories" class="tree-node level-0">
+          <div class="node-content">
+            <span class="node-name">{{ cat.name }}</span>
+            <span class="node-order">排序: {{ cat.sortOrder }}</span>
+            <button (click)="deleteCategory(cat.id)" class="delete-btn-small">删除</button>
+          </div>
+          <div *ngIf="cat.children && cat.children.length > 0" class="children">
+            <div *ngFor="let child of cat.children" class="tree-node level-1">
+              <div class="node-content">
+                <span class="node-name">{{ child.name }}</span>
+                <span class="node-order">排序: {{ child.sortOrder }}</span>
+                <button (click)="deleteCategory(child.id)" class="delete-btn-small">删除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示消息 -->
+  <div *ngIf="submitMessage" class="message">{{ submitMessage }}</div>
+</div>

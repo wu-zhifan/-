@@ -1,0 +1,85 @@
+<div *ngIf="isLoggedIn" class="app-container">
+  <!-- 侧边栏 -->
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">📊</span>
+      <h2>数据可视化平台</h2>
+    </div>
+    
+    <!-- 数据管理菜单组 -->
+    <div class="menu-group">
+      <div class="menu-group-title">📁 数据管理</div>
+      <nav class="menu">
+        <a routerLink="/dashboard" routerLinkActive="active" class="menu-item">
+          <span class="icon">📊</span>
+          <span class="text">数据看板</span>
+        </a>
+        <a routerLink="/data-overview" routerLinkActive="active" class="menu-item">
+          <span class="icon">🗂️</span>
+          <span class="text">数据总览</span>
+        </a>
+        <a routerLink="/data-entry" routerLinkActive="active" class="menu-item">
+          <span class="icon">📝</span>
+          <span class="text">数据录入</span>
+        </a>
+        <a routerLink="/data-report" routerLinkActive="active" class="menu-item">
+          <span class="icon">📈</span>
+          <span class="text">数据报表</span>
+        </a>
+        <a routerLink="/data-alert" routerLinkActive="active" class="menu-item">
+          <span class="icon">🚨</span>
+          <span class="text">数据预警</span>
+        </a>
+        <a routerLink="/ai-assistant" routerLinkActive="active" class="menu-item">
+          <span class="icon">🤖</span>
+          <span class="text">AI助手</span>
+        </a>
+      </nav>
+    </div>
+    
+    <!-- 系统管理菜单组 -->
+    <div class="menu-group">
+      <div class="menu-group-title">⚙️ 系统管理</div>
+      <nav class="menu">
+        <a routerLink="/operation-log" routerLinkActive="active" class="menu-item">
+          <span class="icon">📋</span>
+          <span class="text">操作日志</span>
+        </a>
+        <a routerLink="/system-monitor" routerLinkActive="active" class="menu-item">
+          <span class="icon">🔍</span>
+          <span class="text">系统监控</span>
+        </a>
+        <a routerLink="/system-config" routerLinkActive="active" class="menu-item">
+          <span class="icon">⚙️</span>
+          <span class="text">系统配置</span>
+        </a>
+        <a routerLink="/user-management" routerLinkActive="active" class="menu-item" *ngIf="currentUser?.role?.roleCode === 'ADMIN'">
+          <span class="icon">👥</span>
+          <span class="text">用户管理</span>
+        </a>
+      </nav>
+    </div>
+    
+    <div class="user-info">
+      <div class="user-avatar">
+        <span class="avatar-icon">👤</span>
+        <div class="user-details">
+          <span class="user-name">{{ currentUser?.realName || currentUser?.username }}</span>
+          <span class="user-role">{{ currentUser?.role?.roleName || '普通用户' }}</span>
+        </div>
+      </div>
+      <button (click)="logout()" class="logout-btn">
+        <span>🚪</span>
+        <span>退出登录</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+
+<!-- 登录页 -->
+<router-outlet *ngIf="!isLoggedIn"></router-outlet>

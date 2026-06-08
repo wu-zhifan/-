@@ -1,0 +1,20 @@
+<div class="search-container">
+  <div class="search-input-wrapper">
+    <input 
+      type="text" 
+      [(ngModel)]="keyword"
+      [placeholder]="placeholder"
+      (input)="onInputChange()"
+      class="search-input"
+    >
+    <button (click)="search()" class="search-btn">搜索</button>
+    <button (click)="clearSearch()" class="clear-btn">清空</button>
+  </div>
+
+  <div *ngIf="filters && filters.length > 0" class="filter-wrapper">
+    <select [(ngModel)]="currentFilter" (change)="onFilterChange()" class="filter-select">
+      <option value="">全部</option>
+      <option *ngFor="let filter of filters" [value]="filter.value">{{ filter.label }}</option>
+    </select>
+  </div>
+</div>

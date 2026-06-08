@@ -1,0 +1,54 @@
+server:
+  port: 8082
+  servlet:
+    context-path: /
+    encoding:
+      enabled: true
+      charset: UTF-8
+      force: true
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:data_visualization;DB_CLOSE_DELAY=-1;MODE=MySQL;DATABASE_TO_UPPER=FALSE;NON_KEYWORDS=YEAR,MONTH,VALUE,TIME
+    username: sa
+    password:
+    hikari:
+      connection-init-sql: SET NAMES UTF8
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+  sql:
+    init:
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+      mode: always
+      platform: h2
+      encoding: UTF8
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis:
+  type-aliases-package: com.dataviz.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    call-setters-on-nulls: true
+
+logging:
+  level:
+    com.dataviz: debug
+    org.springframework: info
+
+# AI配置
+ai:
+  api-key: sk-dbfd6776d7964ea186cce7e04e0131e1
+  base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+  model: qwen-plus

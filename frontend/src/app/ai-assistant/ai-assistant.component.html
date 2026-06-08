@@ -1,0 +1,138 @@
+<div class="ai-assistant-container">
+  <div class="page-header fade-in">
+    <h1 class="page-title">
+      <span class="icon">🤖</span>
+      AI智能助手
+    </h1>
+    <p class="page-subtitle">基于通义千问大模型，提供数据分析和智能问答</p>
+  </div>
+
+  <div class="tabs">
+    <button 
+      [class.active]="currentTab === 'chat'" 
+      (click)="currentTab = 'chat'"
+      class="tab-btn"
+    >
+      <span>💬</span> 聊天对话
+    </button>
+    <button 
+      [class.active]="currentTab === 'analyze'" 
+      (click)="currentTab = 'analyze'"
+      class="tab-btn"
+    >
+      <span>📊</span> 数据分析
+    </button>
+    <button 
+      [class.active]="currentTab === 'report'" 
+      (click)="currentTab = 'report'"
+      class="tab-btn"
+    >
+      <span>📋</span> 生成报告
+    </button>
+  </div>
+
+  <div class="content-card card fade-in">
+    <!-- 聊天对话 -->
+    <div *ngIf="currentTab === 'chat'" class="chat-container">
+      <div class="chat-messages" #chatScroll>
+        <div *ngFor="let msg of messages" class="message" [class.user-message]="msg.role === 'user'">
+          <div class="message-avatar">
+            <span *ngIf="msg.role === 'user'">👤</span>
+            <span *ngIf="msg.role === 'assistant'">🤖</span>
+          </div>
+          <div class="message-content">
+            <div class="message-header">
+              <span class="message-role">{{ msg.role === 'user' ? '你' : 'AI助手' }}</span>
+              <span class="message-time">{{ msg.timestamp | date:'HH:mm' }}</span>
+            </div>
+            <div class="message-text">{{ msg.content }}</div>
+          </div>
+        </div>
+        
+        <div *ngIf="isLoading" class="message">
+          <div class="message-avatar">
+            <span>🤖</span>
+          </div>
+          <div class="message-content">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <input 
+          type="text" 
+          [(ngModel)]="inputMessage" 
+          placeholder="输入你的问题..."
+          (keyup.enter)="sendMessage()"
+          [disabled]="isLoading"
+        >
+        <button class="send-btn" (click)="sendMessage()" [disabled]="isLoading || !inputMessage.trim()">
+          <span>发送</span>
+          <span>➤</span>
+        </button>
+      </div>
+
+      <div class="quick-questions">
+        <span class="label">快捷问题：</span>
+        <button *ngFor="let q of quickQuestions" (click)="askQuestion(q)" class="quick-btn">
+          {{ q }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 数据分析 -->
+    <div *ngIf="currentTab === 'analyze'" class="analyze-container">
+      <div class="analyze-header">
+        <h3>数据趋势分析</h3>
+        <p>AI将自动分析当前所有数据，生成趋势报告</p>
+      </div>
+
+      <button class="analyze-btn btn-primary" (click)="analyzeData()" [disabled]="isAnalyzing">
+        <span *ngIf="!isAnalyzing">
+          <span>🔍</span> 开始分析
+        </span>
+        <span *ngIf="isAnalyzing" class="loading-text">
+          <span class="spinner"></span> 分析中...
+        </span>
+      </button>
+
+      <div *ngIf="analysisResult" class="result-container">
+        <div class="result-header">
+          <span>📊</span>
+          <span>分析结果</span>
+        </div>
+        <div class="result-content">{{ analysisResult }}</div>
+      </div>
+    </div>
+
+    <!-- 生成报告 -->
+    <div *ngIf="currentTab === 'report'" class="report-container">
+      <div class="report-header">
+        <h3>业务报告生成</h3>
+        <p>AI将基于当前数据自动生成完整的业务报告</p>
+      </div>
+
+      <button class="report-btn btn-primary" (click)="generateReport()" [disabled]="isGeneratingReport">
+        <span *ngIf="!isGeneratingReport">
+          <span>📋</span> 生成报告
+        </span>
+        <span *ngIf="isGeneratingReport" class="loading-text">
+          <span class="spinner"></span> 生成中...
+        </span>
+      </button>
+
+      <div *ngIf="reportResult" class="result-container">
+        <div class="result-header">
+          <span>📄</span>
+          <span>业务报告</span>
+        </div>
+        <div class="result-content">{{ reportResult }}</div>
+      </div>
+    </div>
+  </div>
+</div>
