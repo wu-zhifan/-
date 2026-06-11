@@ -211,15 +211,34 @@
     align-items: center;
     gap: 8px;
     transition: all 0.3s ease;
-    
+
     &:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: var(--shadow-lg);
     }
-    
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+  }
+
+  .clear-btn {
+    padding: 14px 20px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: var(--bg-hover);
+      border-color: #ef4444;
+      color: #ef4444;
     }
   }
 }

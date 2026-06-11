@@ -1,9 +1,12 @@
 package com.dataviz.service;
 
+import com.dataviz.entity.ChatMessage;
+import com.dataviz.mapper.ChatMessageMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -16,10 +19,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class AIService {
+
+    @Autowired
+    private ChatMessageMapper chatMessageMapper;
 
     @Value("${ai.api-key}")
     private String apiKey;
@@ -32,10 +37,9 @@ public class AIService {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    
-    private final Map<String, List<Map<String, String>>> conversationHistory = new ConcurrentHashMap<>();
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH时mm分ss秒");
+    private static final int MAX_HISTORY_COUNT = 10; // 最多保留最近10轮对话
 
     /**
      * 获取当前时间字符串
@@ -63,7 +67,7 @@ public class AIService {
     public String chat(String userId, String userMessage) {
         try {
             String url = baseUrl + "/chat/completions";
-            
+
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("Authorization", "Bearer " + apiKey);
@@ -71,36 +75,38 @@ public class AIService {
             ObjectNode requestBody = objectMapper.createObjectNode();
             requestBody.put("model", model);
             requestBody.put("temperature", 0.7);
-            
+
             ArrayNode messages = requestBody.putArray("messages");
-            
+
             // 添加系统提示词（包含实时时间）
             ObjectNode systemMessage = messages.addObject();
             systemMessage.put("role", "system");
             systemMessage.put("content", buildSystemPrompt());
-            
-            // 获取对话历史
-            List<Map<String, String>> history = conversationHistory.computeIfAbsent(userId, k -> new ArrayList<>());
-            
+
+            // 从数据库获取对话历史
+            List<ChatMessage> history = chatMessageMapper.findByUserId(userId);
+
             // 添加历史消息（最多保留最近10轮）
-            int startIndex = Math.max(0, history.size() - 10);
+            int startIndex = Math.max(0, history.size() - MAX_HISTORY_COUNT);
             for (int i = startIndex; i < history.size(); i++) {
-                Map<String, String> msg = history.get(i);
+                ChatMessage msg = history.get(i);
                 ObjectNode historyMessage = messages.addObject();
-                historyMessage.put("role", msg.get("role"));
-                historyMessage.put("content", msg.get("content"));
+                historyMessage.put("role", msg.getRole());
+                historyMessage.put("content", msg.getContent());
             }
-            
+
             // 添加当前用户消息
             ObjectNode userMsg = messages.addObject();
             userMsg.put("role", "user");
             userMsg.put("content", userMessage);
-            
-            // 保存到历史
-            Map<String, String> userRecord = new HashMap<>();
-            userRecord.put("role", "user");
-            userRecord.put("content", userMessage);
-            history.add(userRecord);
+
+            // 保存用户消息到数据库
+            ChatMessage userRecord = new ChatMessage();
+            userRecord.setUserId(userId);
+            userRecord.setRole("user");
+            userRecord.setContent(userMessage);
+            userRecord.setCreatedAt(LocalDateTime.now());
+            chatMessageMapper.insert(userRecord);
 
             HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
@@ -108,13 +114,15 @@ public class AIService {
             if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
                 String reply = root.path("choices").get(0).path("message").path("content").asText();
-                
-                // 保存AI回复到历史
-                Map<String, String> assistantRecord = new HashMap<>();
-                assistantRecord.put("role", "assistant");
-                assistantRecord.put("content", reply);
-                history.add(assistantRecord);
-                
+
+                // 保存AI回复到数据库
+                ChatMessage assistantRecord = new ChatMessage();
+                assistantRecord.setUserId(userId);
+                assistantRecord.setRole("assistant");
+                assistantRecord.setContent(reply);
+                assistantRecord.setCreatedAt(LocalDateTime.now());
+                chatMessageMapper.insert(assistantRecord);
+
                 return reply;
             }
         } catch (Exception e) {
@@ -135,7 +143,24 @@ public class AIService {
      * 清空对话历史
      */
     public void clearHistory(String userId) {
-        conversationHistory.remove(userId);
+        chatMessageMapper.deleteByUserId(userId);
+    }
+
+    /**
+     * 获取对话历史
+     */
+    public List<Map<String, Object>> getHistory(String userId) {
+        List<ChatMessage> messages = chatMessageMapper.findByUserId(userId);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (ChatMessage msg : messages) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", msg.getId());
+            map.put("role", msg.getRole());
+            map.put("content", msg.getContent());
+            map.put("createdAt", msg.getCreatedAt());
+            result.add(map);
+        }
+        return result;
     }
 
     /**

@@ -3,6 +3,7 @@ package com.dataviz.mapper;
 import com.dataviz.entity.BusinessData;
 import org.apache.ibatis.annotations.*;
 import org.apache.ibatis.jdbc.SQL;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -135,6 +136,17 @@ public interface BusinessDataMapper {
     @Delete("DELETE FROM biz_data WHERE id = #{id}")
     int deleteById(Long id);
 
+    @Insert("INSERT INTO biz_data(title, \"value\", unit, \"time\", category_id, remark, create_by, create_time) " +
+            "VALUES(#{title}, #{value}, #{unit}, #{time}, #{categoryId}, #{remark}, #{createBy}, CURRENT_TIMESTAMP())")
+    @Options(useGeneratedKeys = true, keyProperty = "id")
+    int insertDynamicData(@Param("title") String title, @Param("value") double value, 
+                          @Param("unit") String unit, @Param("time") LocalDateTime time,
+                          @Param("categoryId") int categoryId, @Param("remark") String remark, 
+                          @Param("createBy") int createBy);
+
+    @Select("SELECT COUNT(*) FROM biz_data WHERE YEAR(\"time\") = #{year}")
+    int countByYear(@Param("year") int year);
+
     @Select("SELECT COUNT(*) FROM biz_data")
     int countAll();
 
@@ -148,7 +160,7 @@ public interface BusinessDataMapper {
 
     @Select("SELECT year_val, month_val, CONCAT(year_val, '-', LPAD(month_val, 2, '0')) as name, total_value FROM (" +
             "SELECT YEAR(\"time\") as year_val, MONTH(\"time\") as month_val, SUM(\"value\") as total_value " +
-            "FROM biz_data GROUP BY YEAR(\"time\"), MONTH(\"time\")) t ORDER BY year_val ASC, month_val ASC")
+            "FROM biz_data WHERE YEAR(\"time\") >= YEAR(CURRENT_DATE) - 1 GROUP BY YEAR(\"time\"), MONTH(\"time\")) t ORDER BY year_val ASC, month_val ASC")
     List<Map<String, Object>> findChartDataByTime();
 
     // 环比统计：本月与上月对比

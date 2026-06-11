@@ -57,6 +57,22 @@ public class AIController {
     }
 
     /**
+     * 获取对话历史
+     */
+    @GetMapping("/history")
+    public Map<String, Object> getHistory(@RequestParam(required = false, defaultValue = "default-user") String userId) {
+        Map<String, Object> result = new HashMap<>();
+        try {
+            result.put("success", true);
+            result.put("data", aiService.getHistory(userId));
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+        return result;
+    }
+
+    /**
      * 分析当前数据趋势
      */
     @PostMapping("/analyze")

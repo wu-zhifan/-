@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
 interface ChatMessage {
@@ -12,11 +12,12 @@ interface ChatMessage {
   templateUrl: './ai-assistant.component.html',
   styleUrls: ['./ai-assistant.component.scss']
 })
-export class AiAssistantComponent {
+export class AiAssistantComponent implements OnInit {
   messages: ChatMessage[] = [];
   inputMessage = '';
   isLoading = false;
   currentTab = 'chat';
+  userId = 'default-user';
 
   analysisResult = '';
   isAnalyzing = false;
@@ -26,19 +27,42 @@ export class AiAssistantComponent {
 
   quickQuestions = [
     '帮我分析一下销售趋势',
-    '哪个分类的数据最好',
+    '哪个分类的数据最好?',
     '预测一下下个月的数据',
     '给我一些数据优化建议'
   ];
 
-  constructor(private http: HttpClient) {
-    this.addWelcomeMessage();
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() {
+    // 组件初始化时加载历史记录
+    this.loadHistory();
+  }
+
+  loadHistory() {
+    this.http.get(`/api/ai/history?userId=${this.userId}`).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          this.messages = response.data.map((msg: any) => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+            timestamp: new Date(msg.createdAt)
+          }));
+        }
+        if (this.messages.length === 0) {
+          this.addWelcomeMessage();
+        }
+      },
+      error: () => {
+        this.addWelcomeMessage();
+      }
+    });
   }
 
   addWelcomeMessage() {
     this.messages.push({
       role: 'assistant',
-      content: '你好！我是你的数据智能助手。我可以帮你：\n\n1. 聊天对话\n2. 分析数据趋势\n3. 生成业务报告\n4. 回答数据相关问题\n\n请选择上方的功能开始体验吧！',
+      content: '你好，我是你的数据智能助理。我可以帮你：\n\n1. 聊天对话\n2. 分析数据趋势\n3. 生成业务报告\n4. 回答数据相关问题\n\n请选择上方的功能开始体验吧！',
       timestamp: new Date()
     });
   }
@@ -56,7 +80,7 @@ export class AiAssistantComponent {
     this.inputMessage = '';
     this.isLoading = true;
 
-    this.http.post('/api/ai/chat', { message }).subscribe({
+    this.http.post('/api/ai/chat', { message, userId: this.userId }).subscribe({
       next: (response: any) => {
         if (response.success) {
           this.messages.push({
@@ -74,6 +98,20 @@ export class AiAssistantComponent {
           timestamp: new Date()
         });
         this.isLoading = false;
+      }
+    });
+  }
+
+  clearHistory() {
+    this.http.post('/api/ai/clear-history', { userId: this.userId }).subscribe({
+      next: (response: any) => {
+        if (response.success) {
+          this.messages = [];
+          this.addWelcomeMessage();
+        }
+      },
+      error: () => {
+        console.error('清空历史失败');
       }
     });
   }

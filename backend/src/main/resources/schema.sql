@@ -78,9 +78,21 @@ CREATE TABLE IF NOT EXISTS sys_alert (
     create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 索引
+-- 绛夊緟
 CREATE INDEX IF NOT EXISTS idx_category_id ON biz_data(category_id);
 CREATE INDEX IF NOT EXISTS idx_time ON biz_data("time");
 CREATE INDEX IF NOT EXISTS idx_user_role ON sys_user(role_id);
 CREATE INDEX IF NOT EXISTS idx_log_user ON sys_log(user_id);
 CREATE INDEX IF NOT EXISTS idx_log_time ON sys_log(create_time);
+
+-- 鑴氭姤娑堟枃瀛楁
+CREATE TABLE IF NOT EXISTS chat_message (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(100) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_user_id ON chat_message(user_id);
+CREATE INDEX IF NOT EXISTS idx_chat_created_at ON chat_message(created_at);
